@@ -19,19 +19,27 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: allowedOrigin,
   credentials: true
 }));
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST']
+    origin: allowedOrigin,
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
-app.use(express.json());
+app.get('/', (req, res) => {
+  res.send('CampusBid API is live and running...');
+});
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
