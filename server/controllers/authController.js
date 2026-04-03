@@ -12,11 +12,9 @@ const generateToken = (id) => {
 };
 
 export const requestOTP = async (req, res) => {
-  // Trim and lowercase to prevent bypass with spaces or caps
   const email = req.body.email?.trim().toLowerCase();
 
   try {
-    // 1. Strict Domain Check (Fake Email Detection Layer 1)
     if (!email || !email.endsWith(`@${COLLEGE_DOMAIN}`)) {
       return res.status(403).json({
         message: `Please provide your official @${COLLEGE_DOMAIN} email address.`,
@@ -30,14 +28,12 @@ export const requestOTP = async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Updated with returnDocument to fix Mongoose warning
     await OTP.findOneAndUpdate(
       { email },
       { otp, createdAt: Date.now() },
       { upsert: true, returnDocument: 'after' }
     );
 
-    // 2. Email Delivery (Fake Email Detection Layer 2)
     try {
       await sendEmail({
         to: email,
@@ -47,7 +43,6 @@ export const requestOTP = async (req, res) => {
       
       return res.status(200).json({ message: 'OTP sent to your official mail.' });
     } catch (mailError) {
-      // Triggers if the email address is invalid/fake and rejected by the mail server
       return res.status(400).json({ 
         message: 'Email delivery failed. Please ensure this is a valid, active official MANIT ID.' 
       });
@@ -125,5 +120,20 @@ export const loginUser = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error("Profile Fetch Error:", error.message);
+    res.status(500).json({ message: 'Server error fetching profile' });
   }
 };

@@ -6,10 +6,15 @@ export const verifyMeetupCode = async (req, res) => {
   const { transactionId, code } = req.body;
 
   try {
-    const transaction = await Transaction.findById(transactionId);
+
+    let transaction = await Transaction.findById(transactionId).catch(() => null);
+    
+    if (!transaction) {
+      transaction = await Transaction.findOne({ item: transactionId }).sort({ createdAt: -1 });
+    }
 
     if (!transaction) {
-      return res.status(404).json({ message: 'Transaction not found' });
+      return res.status(404).json({ message: 'Transaction not found for this item.' });
     }
 
     if (transaction.buyer.toString() !== req.user._id.toString()) {
@@ -17,7 +22,7 @@ export const verifyMeetupCode = async (req, res) => {
     }
 
     if (transaction.meetupCode !== code) {
-      return res.status(400).json({ message: 'Invalid meetup code' });
+      return res.status(400).json({ message: 'Invalid meetup code. Please check the seller\'s email.' });
     }
 
     transaction.codeVerified = true;
@@ -33,7 +38,11 @@ export const completeHandshake = async (req, res) => {
   const { transactionId, action } = req.body; 
 
   try {
-    const transaction = await Transaction.findById(transactionId);
+    let transaction = await Transaction.findById(transactionId).catch(() => null);
+    
+    if (!transaction) {
+      transaction = await Transaction.findOne({ item: transactionId }).sort({ createdAt: -1 });
+    }
 
     if (!transaction || !transaction.codeVerified) {
       return res.status(400).json({ message: 'Transaction invalid or code not verified yet' });
@@ -54,7 +63,7 @@ export const completeHandshake = async (req, res) => {
       await seller.save();
       await buyer.save();
 
-      res.json({ message: 'Transaction completed successfully', item, sellerCredit: seller.creditScore });
+      res.json({ message: 'Transaction completed successfully! Trust scores increased.', item, sellerCredit: seller.creditScore });
 
     } else if (action === 'Reject') {
       item.rejectionCount += 1;
@@ -70,7 +79,7 @@ export const completeHandshake = async (req, res) => {
       await item.save();
       await transaction.save();
 
-      res.json({ message: 'Item rejected and recorded', itemStatus: item.status });
+      res.json({ message: 'Item rejected. Transaction cancelled.', itemStatus: item.status });
     } else {
       res.status(400).json({ message: 'Invalid action' });
     }

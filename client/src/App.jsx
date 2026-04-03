@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout, setUser } from './store/slices/authSlice';
+import api from './api/axios';
+
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Login from './pages/Login';
@@ -24,14 +27,37 @@ const ProtectedRoute = ({ children }) => {
 
 const AdminRoute = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
-  
   return children;
 };
 
 function App() {
+  const dispatch = useDispatch();
+  const { token, user } = useSelector((state) => state.auth);
+  const [isHydrating, setIsHydrating] = useState(true);
+
+  useEffect(() => {
+    const hydrateUser = async () => {
+      if (token && !user) {
+        try {
+          const response = await api.get('/auth/profile'); 
+          dispatch(setUser(response.data));
+        } catch (error) {
+          console.error("Session expired or invalid token.", error);
+          dispatch(logout()); 
+        }
+      }
+      setIsHydrating(false);
+    };
+
+    hydrateUser();
+  }, [token, user, dispatch]);
+
+  if (isHydrating && token && !user) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-indigo-600 font-bold">Verifying Session...</div>;
+  }
+
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans">

@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  user: null,
+  user: null, 
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
 };
@@ -16,6 +16,10 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       localStorage.setItem('token', action.payload.token);
     },
+    // NEW: Action to restore user data on page refresh
+    setUser: (state, action) => {
+      state.user = action.payload;
+    },
     logout: (state) => {
       state.user = null;
       state.token = null;
@@ -25,5 +29,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginSuccess, logout } = authSlice.actions;
+export const { loginSuccess, logout, setUser } = authSlice.actions;
 export default authSlice.reducer;

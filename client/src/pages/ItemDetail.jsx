@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import api from '../api/axios';
@@ -20,7 +20,6 @@ const ItemDetail = () => {
       try {
         const response = await api.get(`/items/${id}`);
         setItem(response.data);
-        // Default bid to current price + 10 for convenience
         setBidAmount(response.data.currentPrice + 10);
       } catch (err) {
         setError(err.response?.data?.message || 'Item not found');
@@ -84,16 +83,20 @@ const ItemDetail = () => {
 
   const isSeller = user._id === item.seller._id;
   const isExpired = new Date(item.endTime) < new Date();
+  const isWinner = item.winner === user._id;
+  
+  const displayImage = (item.images && item.images.length > 0) 
+    ? item.images[0] 
+    : 'https://via.placeholder.com/600x400?text=No+Image+Available';
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col lg:flex-row border border-gray-100">
         
-        {/* Left Column: Image and Description */}
         <div className="w-full lg:w-3/5 bg-gray-50 flex flex-col border-r border-gray-100">
           <div className="relative aspect-square md:aspect-video lg:aspect-auto lg:h-125 overflow-hidden bg-gray-200">
             <img 
-              src={item.image || 'https://via.placeholder.com/600x400?text=No+Image+Available'} 
+              src={displayImage} 
               alt={item.title} 
               className="w-full h-full object-cover"
             />
@@ -121,7 +124,6 @@ const ItemDetail = () => {
           </div>
         </div>
 
-        {/* Right Column: Bidding Actions */}
         <div className="w-full lg:w-2/5 p-8 lg:p-12 bg-white flex flex-col justify-center">
           <div className="text-center mb-10">
             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Current Highest Bid</p>
@@ -132,7 +134,31 @@ const ItemDetail = () => {
           {error && <div className="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg text-sm font-bold">{error}</div>}
           {feedbackMsg && <div className="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-r-lg text-sm font-bold">{feedbackMsg}</div>}
 
-          {!isExpired && !isSeller ? (
+          {item.status === 'Sold' ? (
+            <div className="text-center p-6 bg-green-50 text-green-700 font-bold rounded-2xl border border-green-200">
+              <span className="text-2xl block mb-2">🤝</span>
+              This item has been successfully sold!
+            </div>
+          ) : item.status === 'Pending_Meetup' ? (
+            isWinner ? (
+              <div className="text-center p-6 bg-blue-50 text-blue-800 rounded-2xl border border-blue-200 shadow-sm">
+                <h3 className="font-black text-lg mb-2">🎉 You Won the Auction!</h3>
+                <p className="text-sm mb-4">The seller has received an OTP in their email. Meet them to inspect the item.</p>
+                <Link to="/my-bids" className="inline-block w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors">
+                  Go to My Bids to Verify OTP
+                </Link>
+              </div>
+            ) : isSeller ? (
+              <div className="text-center p-6 bg-amber-50 text-amber-800 rounded-2xl border border-amber-200 shadow-sm">
+                <h3 className="font-black text-lg mb-2">⏳ Waiting for Handshake</h3>
+                <p className="text-sm">You won this auction! Check your email for the 4-digit OTP and meet the buyer to hand over the item.</p>
+              </div>
+            ) : (
+              <div className="text-center p-6 bg-gray-100 text-gray-500 font-black rounded-2xl border-2 border-dashed border-gray-300 uppercase tracking-widest">
+                Auction Pending Handshake
+              </div>
+            )
+          ) : !isExpired && !isSeller ? (
             <form onSubmit={handleBid} className="space-y-6">
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-400">₹</span>
@@ -152,18 +178,17 @@ const ItemDetail = () => {
                 PLACE YOUR BID
               </button>
             </form>
-          ) : isExpired ? (
+          ) : isExpired && item.bids.length === 0 ? (
             <div className="text-center p-6 bg-gray-100 text-gray-500 font-black rounded-2xl border-2 border-dashed border-gray-300 uppercase tracking-widest">
-              Auction Closed
+              Expired Unsold
             </div>
           ) : (
-            <div className="text-center p-6 bg-indigo-50 text-indigo-700 font-bold rounded-2xl border border-indigo-100">
-              You are managing this listing
-            </div>
+             <div className="text-center p-6 bg-indigo-50 text-indigo-700 font-bold rounded-2xl border border-indigo-100">
+               You are managing this listing
+             </div>
           )}
 
-          {/* Feedback Buttons */}
-          {!isSeller && !isExpired && (
+          {!isSeller && !isExpired && item.status === 'Active' && (
             <div className="mt-12 pt-8 border-t border-gray-100">
               <p className="text-center text-xs font-black text-gray-300 uppercase tracking-widest mb-4">Market Sentiment</p>
               <div className="flex space-x-3">
