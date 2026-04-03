@@ -6,7 +6,12 @@ export const createItem = async (req, res) => {
   try {
     console.log("File received from Multer:", req.file);
 
-    const imageUrl = req.file ? req.file.path : 'https://via.placeholder.com/400';
+    let imageUrl = 'https://via.placeholder.com/400';
+    
+    if (req.file) {
+      imageUrl = req.file.secure_url || req.file.url || req.file.path;
+      console.log("Extracted Image URL:", imageUrl);
+    }
 
     const item = await Item.create({
       title,
