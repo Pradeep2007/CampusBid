@@ -4,6 +4,8 @@ export const createItem = async (req, res) => {
   const { title, description, category, startingPrice, endTime } = req.body;
 
   try {
+    console.log("File received from Multer:", req.file);
+
     const imageUrl = req.file ? req.file.path : 'https://via.placeholder.com/400';
 
     const item = await Item.create({
@@ -20,6 +22,7 @@ export const createItem = async (req, res) => {
 
     res.status(201).json(item);
   } catch (error) {
+    console.error("Create Item Error:", error.message);
     res.status(400).json({ message: error.message });
   }
 };
@@ -91,6 +94,24 @@ export const submitFeedback = async (req, res) => {
     const updatedItem = await Item.findByIdAndUpdate(req.params.id, updateQuery, { new: true });
     res.json(updatedItem.feedback);
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMyListings = async (req, res) => {
+  try {
+    const items = await Item.find({ seller: req.user._id }).sort({ createdAt: -1 });
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMyBids = async (req, res) => {
+  try {
+    const items = await Item.find({ 'bids.bidder': req.user._id }).sort({ endTime: 1 });
+    res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
