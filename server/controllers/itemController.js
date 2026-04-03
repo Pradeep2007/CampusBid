@@ -13,8 +13,9 @@ export const createItem = async (req, res) => {
       startingPrice,
       currentPrice: startingPrice,
       endTime,
-      image: imageUrl, 
+      images: [imageUrl], 
       seller: req.user._id,
+      status: 'Active' 
     });
 
     res.status(201).json(item);
@@ -48,11 +49,16 @@ export const getItemById = async (req, res) => {
       .populate('seller', 'name creditScore email')
       .populate('bids.bidder', 'name');
 
-    if (item) {
-      res.json(item);
-    } else {
-      res.status(404).json({ message: 'Item not found' });
+    if (!item) return res.status(404).json({ message: 'Item not found' });
+
+    let winnerId = null;
+    if (item.status === 'Pending_Meetup' && item.bids.length > 0) {
+      const highestBid = [...item.bids].sort((a, b) => b.amount - a.amount)[0];
+      winnerId = highestBid.bidder._id;
     }
+
+    res.json({ ...item._doc, winner: winnerId });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
