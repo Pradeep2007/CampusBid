@@ -12,6 +12,11 @@ export const protect = async (req, res, next) => {
 
       req.user = await User.findById(decoded.id).select('-password');
       
+      // FIX: If the token is valid but the user was deleted from the database, block them
+      if (!req.user) {
+        return res.status(401).json({ message: 'User no longer exists. Please log in again.' });
+      }
+      
       return next(); 
     } catch (error) {
       return res.status(401).json({ message: 'Not authorized, token failed' });
@@ -27,7 +32,6 @@ export const admin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     next();
   } else {
-    
     res.status(403).json({ message: 'Not authorized as an admin' });
   }
 };
