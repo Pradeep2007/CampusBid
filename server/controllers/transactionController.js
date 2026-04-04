@@ -6,7 +6,6 @@ export const verifyMeetupCode = async (req, res) => {
   const { transactionId, code } = req.body;
 
   try {
-
     let transaction = await Transaction.findById(transactionId).catch(() => null);
     
     if (!transaction) {
@@ -67,6 +66,7 @@ export const completeHandshake = async (req, res) => {
 
     } else if (action === 'Reject') {
       item.rejectionCount += 1;
+      seller.creditScore -= 10; 
       
       if (item.rejectionCount >= 3) {
         item.status = 'Blacklisted';
@@ -78,11 +78,51 @@ export const completeHandshake = async (req, res) => {
       
       await item.save();
       await transaction.save();
+      await seller.save(); 
 
-      res.json({ message: 'Item rejected. Transaction cancelled.', itemStatus: item.status });
+      res.json({ message: 'Item rejected. Seller trust score penalized.', itemStatus: item.status });
     } else {
       res.status(400).json({ message: 'Invalid action' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const reportBuyerAndCancel = async (req, res) => {
+  const { transactionId } = req.body;
+
+  try {
+    let transaction = await Transaction.findById(transactionId).catch(() => null);
+    if (!transaction) {
+      transaction = await Transaction.findOne({ item: transactionId }).sort({ createdAt: -1 });
+    }
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found.' });
+    }
+
+    if (transaction.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the seller can report the buyer.' });
+    }
+
+    const item = await Item.findById(transaction.item);
+    const buyer = await User.findById(transaction.buyer);
+
+    transaction.status = 'Cancelled';
+    item.status = 'Expired_Unsold';
+    item.winner = null; 
+    
+    buyer.creditScore -= 15; 
+
+    await transaction.save();
+    await item.save();
+    await buyer.save();
+
+    res.json({ 
+      message: 'Buyer reported. Transaction cancelled and item returned to your listings.', 
+      itemStatus: item.status 
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

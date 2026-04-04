@@ -54,7 +54,7 @@ export const requestOTP = async (req, res) => {
 };
 
 export const registerUser = async (req, res) => {
-  const { name, password, otp } = req.body;
+  const { name, password, otp, phone } = req.body; 
   const email = req.body.email?.trim().toLowerCase();
 
   try {
@@ -68,6 +68,7 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password,
+      phone, 
     });
 
     await OTP.deleteOne({ _id: otpRecord._id });
@@ -77,6 +78,7 @@ export const registerUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         creditScore: user.creditScore,
       },

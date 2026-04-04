@@ -7,7 +7,7 @@ import api from '../api/axios';
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', otp: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '', otp: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,14 +29,13 @@ const Login = () => {
     setIsLogin(!isLogin);
     setStep(1);
     setError('');
-    setFormData({ name: '', email: '', password: '', otp: '' });
+    setFormData({ name: '', email: '', password: '', phone: '', otp: '' });
   };
 
   const handleRequestOTP = async (e) => {
     e.preventDefault();
     setError('');
 
-    // 1. Client-Side Strict Check (Case-Insensitive)
     const emailLower = formData.email.trim().toLowerCase();
     if (!emailLower.endsWith('@stu.manit.ac.in')) {
       setError('Please provide your official @stu.manit.ac.in email address.');
@@ -45,11 +44,9 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      // 2. Server-side check (detects if ID exists/active on MANIT server)
       await api.post('/auth/request-otp', { email: emailLower });
       setStep(2);
     } catch (err) {
-      // 3. Captures the specific "Email delivery failed" message from your Controller
       setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
     } finally {
       setIsLoading(false);
@@ -109,17 +106,34 @@ const Login = () => {
 
         <form className="space-y-6" onSubmit={isLogin ? handleSubmit : (step === 1 ? handleRequestOTP : handleSubmit)}>
           {!isLogin && step === 1 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Full Name</label>
-              <input
-                name="name"
-                type="text"
-                required
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm outline-none"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                <input
+                  name="name"
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Mobile Number (WhatsApp preferred)</label>
+                <input
+                  name="phone"
+                  type="tel"
+                  required
+                  pattern="[0-9]{10}"
+                  placeholder="10-digit mobile number"
+                  title="Please enter a valid 10-digit mobile number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm outline-none"
+                />
+              </div>
+            </>
           )}
 
           <div>
@@ -153,7 +167,7 @@ const Login = () => {
 
           {!isLogin && step === 2 && (
             <div className="animate-in fade-in duration-500">
-              <label className="block text-sm font-medium text-indigo-700 font-bold">One-Time Password (OTP)</label>
+              <label className="block text-sm medium text-indigo-700 font-bold">One-Time Password (OTP)</label>
               <input
                 name="otp"
                 type="text"

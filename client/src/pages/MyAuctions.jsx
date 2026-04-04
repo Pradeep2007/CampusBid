@@ -20,6 +20,26 @@ const MyAuctions = () => {
     fetchMyAuctions();
   }, []);
 
+  const handleReportBuyer = async (transactionId) => {
+    const isSure = window.confirm("⚠️ Are you sure? This will cancel the sale and penalize the buyer's trust score by 15 points.");
+    if (!isSure) return;
+
+    try {
+      const response = await api.post('/transactions/report-buyer', { transactionId });
+      alert(response.data.message);
+      
+      setItems(items.map(item => {
+        const currentTxId = item.transaction || item.transactionId || item._id;
+        if (currentTxId === transactionId) {
+          return { ...item, status: 'Expired_Unsold' };
+        }
+        return item;
+      }));
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to report buyer.");
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="mb-8 flex justify-between items-end">
@@ -42,9 +62,10 @@ const MyAuctions = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item) => {
+            const transactionId = item.transaction || item.transactionId || item._id;
+
             return (
               <div key={item._id} className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col">
-                {/* Image Placeholder */}
                 <div className="h-40 bg-gray-200 w-full overflow-hidden relative">
                   <img 
                     src={(item.images && item.images.length > 0) ? item.images[0] : 'https://via.placeholder.com/400x200?text=No+Image'} 
@@ -80,9 +101,17 @@ const MyAuctions = () => {
                     <p className="text-3xl font-black text-green-600 mb-4">₹{item.currentPrice}</p>
                     
                     {item.status === 'Pending_Meetup' ? (
-                      <Link to={`/auctions/${item._id}`} className="block text-center w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
-                        📧 Check Email & Meet Buyer
-                      </Link>
+                      <div className="space-y-2">
+                        <Link to={`/auctions/${item._id}`} className="block text-center w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
+                          📧 Check Email & Meet Buyer
+                        </Link>
+                        <button 
+                          onClick={() => handleReportBuyer(transactionId)}
+                          className="block text-center w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl border border-red-100 transition-colors text-sm"
+                        >
+                          ⚠️ Report No-Show / Lowball
+                        </button>
+                      </div>
                     ) : (
                       <Link to={`/auctions/${item._id}`} className="block text-center w-full bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold py-3 rounded-xl border border-gray-200 transition-colors">
                         View Details
