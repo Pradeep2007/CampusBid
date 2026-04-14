@@ -36,38 +36,69 @@ export const startCronJobs = () => {
 
           await sendEmail({
             to: buyer.email,
-            subject: `🎉 You won the auction for ${item.title}!`,
-            text: `Congratulations! You won ${item.title} for ₹${finalPrice}.\n\n--- NEXT STEPS ---\n1. Contact the seller, ${seller.name}, at ${seller.email} or call/WhatsApp them at ${seller.phone} to arrange a meetup.\n2. Bring exact cash or have your payment app ready.\n3. Ask the seller for their 4-digit Meetup Code to unlock the item inspection.\n\nStay safe!`
+            subject: `CampusBids Notice: Action required for ${item.title}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.5;">
+                <p>This is an automated notice that your bid for <strong>${item.title}</strong> was successful.</p>
+                <p><strong>Final Amount:</strong> Rs. ${finalPrice}<br/>
+                <strong>Seller:</strong> ${seller.name}</p>
+                <p><strong>Contact Seller:</strong><br/>
+                Email: <a href="mailto:${seller.email}" style="color: #2563eb;">${seller.email}</a><br/>
+                Phone: <a href="tel:${seller.phone}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${seller.phone}</a></p>
+                <p>Please contact the student to arrange the handover. Provide them with your 4-digit verification code to complete the process.</p>
+                <p>Regards,<br/>CampusBids System</p>
+              </div>
+            `
           });
 
           await sendEmail({
             to: seller.email,
-            subject: `🤝 Your item ${item.title} has sold!`,
-            text: `Great news! ${buyer.name} won your auction for ₹${finalPrice}.\n\n--- NEXT STEPS ---\n1. Contact the buyer at ${buyer.email} or call/WhatsApp them at ${buyer.phone} to arrange a meetup.\n2. Bring the item in the condition described.\n3. CRITICAL: Give the buyer this exact Meetup Code so they can verify the handover: ${meetupCode}\n\nStay safe!`
+            subject: `CampusBids Notice: Status update for ${item.title}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.5;">
+                <p>This is an automated notice that your listing for <strong>${item.title}</strong> has concluded successfully.</p>
+                <p><strong>Buyer:</strong> ${buyer.name}</p>
+                <p><strong>Contact Buyer:</strong><br/>
+                Email: <a href="mailto:${buyer.email}" style="color: #2563eb;">${buyer.email}</a><br/>
+                Phone: <a href="tel:${buyer.phone}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${buyer.phone}</a></p>
+                <p>Please contact the student to arrange the handover. Collect their 4-digit verification code to verify the transaction: <strong>${meetupCode}</strong></p>
+                <p>Regards,<br/>CampusBids System</p>
+              </div>
+            `
           });
 
         } else {
           item.status = 'Expired_Unsold';
           await item.save();
 
-          const highPriceCount = item.feedback ? item.feedback.filter(f => f.toLowerCase() === 'high price').length : 0;
-          const lowDemandCount = item.feedback ? item.feedback.filter(f => f.toLowerCase() === 'low demand').length : 0;
+          const highPriceCount = item.feedback ? item.feedback.filter(f => f.trim().toLowerCase() === 'high price').length : 0;
+          const lowDemandCount = item.feedback ? item.feedback.filter(f => f.trim().toLowerCase() === 'low demand').length : 0;
 
-          let feedbackMessage = `Unfortunately, your auction for "${item.title}" has ended without any bids.\n\n`;
+          let htmlFeedback = `
+            <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.5;">
+              <p>This is an automated notice regarding your listing: <strong>${item.title}</strong>.</p>
+              <p>The listing period has concluded without any active bids.</p>
+          `;
 
           if (highPriceCount > 0 || lowDemandCount > 0) {
-            feedbackMessage += `Here is the anonymous feedback left by students who viewed your item:\n`;
-            feedbackMessage += `🔴 "Price is too high" clicks: ${highPriceCount}\n`;
-            feedbackMessage += `📉 "Low demand / Not interested" clicks: ${lowDemandCount}\n\n`;
-            feedbackMessage += `Consider lowering your starting price based on this feedback before relisting!`;
+            htmlFeedback += `
+              <p><strong>Market Data Summary:</strong></p>
+              <ul>
+                <li>Marked as 'Price Too High': <strong>${highPriceCount} users</strong></li>
+                <li>Marked as 'Low Demand': <strong>${lowDemandCount} users</strong></li>
+              </ul>
+              <p>You may adjust your listing details based on this data before reposting.</p>
+            `;
           } else {
-            feedbackMessage += `No specific feedback was left by viewers. Consider lowering the starting price or adding better photos before relisting!`;
+            htmlFeedback += `<p>No market data was collected for this listing. You may repost the item at your convenience.</p>`;
           }
+
+          htmlFeedback += `<p>Regards,<br/>CampusBids System</p></div>`;
 
           await sendEmail({
             to: item.seller.email,
-            subject: `Auction Ended: ${item.title} went unsold`,
-            text: feedbackMessage
+            subject: `CampusBids Notice: Listing expired for ${item.title}`,
+            html: htmlFeedback
           });
         }
       }

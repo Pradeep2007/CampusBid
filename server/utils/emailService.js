@@ -1,4 +1,4 @@
-export const sendEmail = async ({ to, subject, text }) => {
+export const sendEmail = async ({ to, subject, text, html }) => {
   try {
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
@@ -19,8 +19,8 @@ export const sendEmail = async ({ to, subject, text }) => {
         subject: subject,
         content: [
           {
-            type: "text/plain",
-            value: text
+            type: html ? "text/html" : "text/plain",
+            value: html || text
           }
         ]
       })
@@ -32,7 +32,7 @@ export const sendEmail = async ({ to, subject, text }) => {
       throw new Error('Email delivery failed via SendGrid.');
     }
     
-    console.log(`✅ OTP successfully sent to ${to} via SendGrid HTTP API!`);
+    console.log(`✅ Email successfully sent to ${to} via SendGrid!`);
   } catch (error) {
     console.error("🚨 FETCH ERROR:", error);
     throw new Error('Email delivery failed. Please check the email address.');
