@@ -33,7 +33,7 @@ const Profile = () => {
           {/* Changed to flex-col on mobile, flex-row on larger screens */}
           <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-6 sm:gap-0 mb-8 text-center sm:text-left">
             <div className="w-full sm:w-auto overflow-hidden">
-              <h1 className="text-3xl font-extrabold text-gray-900 break-words">{user.name}</h1>
+              <h1 className="text-3xl font-extrabold text-gray-900 wrap-break-words">{user.name}</h1>
               <p className="text-gray-500 text-lg mt-1 truncate">{user.email}</p>
               <div className="mt-3 sm:mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                 Verified MANIT Student ✓

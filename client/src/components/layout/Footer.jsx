@@ -40,19 +40,15 @@ const Footer = () => {
             <h4 className="text-gray-900 font-bold uppercase text-xs tracking-widest mb-4">MANIT Links</h4>
             <ul className="space-y-2">
               <li><a href="https://www.manit.ac.in/" target="_blank" rel="noreferrer" className="text-gray-600 hover:text-indigo-600 text-sm transition-colors">Official Website</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-indigo-600 text-sm transition-colors">Student Portal</a></li>
+              <li><a href="https://students.manit.ac.in/" className="text-gray-600 hover:text-indigo-600 text-sm transition-colors">Student Portal</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-xs text-center md:text-left">
+        <div className="pt-8 border-t border-gray-100 text-center">
+          <p className="text-gray-400 text-xs">
             © {currentYear} CampusBids MANIT. Developed with ❤️ by Pradeep.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">MERN Stack</span>
-            <span className="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded">Socket.io Live</span>
-          </div>
         </div>
       </div>
     </footer>
