@@ -49,6 +49,26 @@ export const startCronJobs = () => {
         } else {
           item.status = 'Expired_Unsold';
           await item.save();
+
+          const highPriceCount = item.feedback ? item.feedback.filter(f => f.toLowerCase() === 'high price').length : 0;
+          const lowDemandCount = item.feedback ? item.feedback.filter(f => f.toLowerCase() === 'low demand').length : 0;
+
+          let feedbackMessage = `Unfortunately, your auction for "${item.title}" has ended without any bids.\n\n`;
+
+          if (highPriceCount > 0 || lowDemandCount > 0) {
+            feedbackMessage += `Here is the anonymous feedback left by students who viewed your item:\n`;
+            feedbackMessage += `🔴 "Price is too high" clicks: ${highPriceCount}\n`;
+            feedbackMessage += `📉 "Low demand / Not interested" clicks: ${lowDemandCount}\n\n`;
+            feedbackMessage += `Consider lowering your starting price based on this feedback before relisting!`;
+          } else {
+            feedbackMessage += `No specific feedback was left by viewers. Consider lowering the starting price or adding better photos before relisting!`;
+          }
+
+          await sendEmail({
+            to: item.seller.email,
+            subject: `Auction Ended: ${item.title} went unsold`,
+            text: feedbackMessage
+          });
         }
       }
     } catch (error) {

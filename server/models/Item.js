@@ -27,11 +27,7 @@ const itemSchema = new mongoose.Schema(
         time: { type: Date, default: Date.now }
       }
     ],
-    feedback: {
-      tooExpensiveCount: { type: Number, default: 0 },
-      notNeededCount: { type: Number, default: 0 },
-      votedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
-    },
+    feedback: [{ type: String }],
     rejectionCount: { type: Number, default: 0 }
   },
   { timestamps: true }

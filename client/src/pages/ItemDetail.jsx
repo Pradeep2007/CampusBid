@@ -193,13 +193,13 @@ const ItemDetail = () => {
               <p className="text-center text-xs font-black text-gray-300 uppercase tracking-widest mb-4">Market Sentiment</p>
               <div className="flex space-x-3">
                 <button 
-                  onClick={() => handleFeedback('Too Expensive')} 
+                  onClick={() => handleFeedback('High Price')} 
                   className="flex-1 bg-white border-2 border-gray-100 hover:border-red-100 hover:text-red-600 text-gray-400 py-3 rounded-xl text-xs font-black transition-all uppercase tracking-tighter"
                 >
                   Price Too High
                 </button>
                 <button 
-                  onClick={() => handleFeedback('Not Needed')} 
+                  onClick={() => handleFeedback('Low Demand')} 
                   className="flex-1 bg-white border-2 border-gray-100 hover:border-indigo-100 hover:text-indigo-600 text-gray-400 py-3 rounded-xl text-xs font-black transition-all uppercase tracking-tighter"
                 >
                   Low Demand

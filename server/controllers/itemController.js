@@ -82,23 +82,10 @@ export const submitFeedback = async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    if (item.feedback.votedUsers.includes(req.user._id)) {
-      return res.status(400).json({ message: 'You have already provided feedback for this item' });
-    }
+    item.feedback.push(feedbackType);
+    await item.save();
 
-    const updateQuery = {
-      $addToSet: { 'feedback.votedUsers': req.user._id }
-    };
-
-    if (feedbackType === 'Too Expensive') {
-      updateQuery.$inc = { 'feedback.tooExpensiveCount': 1 };
-    } else if (feedbackType === 'Not Needed') {
-      updateQuery.$inc = { 'feedback.notNeededCount': 1 };
-    }
-
-    const updatedItem = await Item.findByIdAndUpdate(req.params.id, updateQuery, { new: true });
-    res.json(updatedItem.feedback);
-
+    res.json(item.feedback);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
