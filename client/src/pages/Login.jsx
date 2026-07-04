@@ -143,7 +143,7 @@ const Login = () => {
               type="email"
               required
               disabled={!isLogin && step === 2}
-              placeholder="2311201111@stu.manit.ac.in"
+              placeholder="example@stu.manit.ac.in"
               value={formData.email}
               onChange={handleChange}
               className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm outline-none ${(!isLogin && step === 2) ? 'bg-gray-100 cursor-not-allowed' : 'focus:ring-indigo-500 focus:border-indigo-500'}`}
